@@ -551,7 +551,7 @@ class Api
         }
     }
 
-    public static function authByPhone(int $phone = 79138795860)
+    public static function authByPhone(int $phone = 0)
     {
         $url = self::API_URL . '/apps/?token=' . self::API_TOKEN
             . '&app_id=' . self::APP_ID
