@@ -64,7 +64,7 @@ return [
 
     // Enter your MySQL database credentials
     'mysql' => [
-        'host' => 'localhost',
+        'host' => 'mysqldb',
         'user' => 'root',
         'password' => 'root',
         'database' => 'erkc_bot',
