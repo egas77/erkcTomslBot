@@ -3,7 +3,7 @@
 .DS_Store
 
 # Application
-data/mysql/*.*
+/data/mysql/**
 
 # PHPStorm
 .idea/**/workspace.xml
@@ -21,4 +21,4 @@ nbproject/
 
 # SSL Certs
 etc/ssl/
-/data/db/mysql/
+
