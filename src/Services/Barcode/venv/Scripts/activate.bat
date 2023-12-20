@@ -1,6 +1,6 @@
 @echo off
 
-set "VIRTUAL_ENV=.\src\Services\Barcode\venv"
+set "VIRTUAL_ENV=.\Services\Barcode\venv"
 
 if defined _OLD_VIRTUAL_PROMPT (
     set "PROMPT=%_OLD_VIRTUAL_PROMPT%"

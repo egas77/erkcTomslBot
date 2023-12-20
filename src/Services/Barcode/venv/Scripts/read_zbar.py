@@ -1,4 +1,4 @@
-#!.\src\Services\Barcode\venv\Scripts\python.exe
+#!.\Services\Barcode\venv\Scripts\python.exe
 from __future__ import print_function
 
 import argparse

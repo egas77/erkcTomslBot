@@ -127,9 +127,9 @@ class Api
             'status' => false,
             'text' => 'Код не распознан, либо не найден. Попробуйте более лучше сделать фото.'
         ];
-        $pythonScriptPath = '.\src\Services\Barcode\decode_barcode.py';
+        $pythonScriptPath = '.\Services\Barcode\decode_barcode.py';
         $output = shell_exec(
-            ' .\src\Services\Barcode\venv\Scripts\python.exe'
+            ' .\Services\Barcode\venv\Scripts\python.exe'
             . ' ' . $pythonScriptPath
             . ' ' . $barcodeImagePath
         );
