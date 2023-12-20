@@ -655,7 +655,7 @@ class Api
         $access_token = (new Api())->getAccessToken($userId, $phone);
         $method = 'payments.getbyuser';
         $sig = self::genSig($access_token, $method);
-        $response = self::fetchAuthUrl($method, $access_token, $sig, 'code=200004008998');
+        $response = self::fetchAuthUrl($method, $access_token, $sig);
         if (!empty($response)) {
             $pageCount = (int)ceil(count($response) / 12);
             $totalPayments = count($response);
@@ -680,8 +680,8 @@ class Api
     {
         $access_token = (new Api())->getAccessToken($userId, $phone);
         $method = 'ipu.gethistorybyreceipt';
-        $sig = self::genSig($access_token, $method, 'code=200004008998');
-        $response = self::fetchAuthUrl($method, $access_token, $sig, 'code=200004008998');
+        $sig = self::genSig($access_token, $method);
+        $response = self::fetchAuthUrl($method, $access_token, $sig);
         if (!empty($response)) {
             $pageCount = (int)ceil(count($response) / 12);
             $totalMeters = count($response);

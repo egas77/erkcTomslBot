@@ -54,7 +54,7 @@ class HistoriesCommand extends SystemCommand
             $message_id = $callback_query->getMessage()->getMessageId();
             $chat_id = $callback_query->getMessage()->getChat()->getId();
         }
-        $payments = Api::getPaymentHistories(0, $user_id, '+79138293043');
+        $payments = Api::getPaymentHistories(0, $user_id);
         if (empty($payments)) {
             return Request::sendMessage([
                 'chat_id' => $chat_id,
