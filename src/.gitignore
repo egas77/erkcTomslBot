@@ -1,6 +1,6 @@
 composer.phar
 composer.lock
 config.php
-.idea
+.idea/
 .log
 
