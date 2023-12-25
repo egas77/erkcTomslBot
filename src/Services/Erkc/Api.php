@@ -22,7 +22,9 @@ class Api
 
     public function checkBarcodeByImage($path): array
     {
+        return $this->_parsePhotoBarcode($path);
         return $this->parsePhotoBarcode($path);
+
     }
 
     public function fetchMetersData(string $barcode): array
@@ -121,18 +123,47 @@ class Api
         }
     }
 
+    public function _parsePhotoBarcode(string $barcodeImagePath)
+    {
+        $result = [
+            'status' => false,
+            'text' => 'Код не распознан, либо не найден. Попробуйте более лучше сделать фото.'
+        ];
+        //Initialise the cURL var
+        $ch = curl_init();
+        //Get the response from cURL
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+        //Set the Url
+        curl_setopt($ch, CURLOPT_URL, 'decode/decode-barcode');
+
+        //Create a POST array with the file in it
+        $postData = [
+            'testData' => '@'.$barcodeImagePath,
+        ];
+        file_put_contents('python.log',var_export($postData,true),FILE_APPEND);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+
+        // Execute the request
+        $response = curl_exec($ch);
+        file_put_contents('python.log', $response,FILE_APPEND);
+    }
+
     public function parsePhotoBarcode(string $barcodeImagePath): array
     {
         $result = [
             'status' => false,
             'text' => 'Код не распознан, либо не найден. Попробуйте более лучше сделать фото.'
         ];
-        $pythonScriptPath = '.\Services\Barcode\decode_barcode.py';
+        $pythonScriptPath = 'Services/Barcode/decode_barcode.py';
         $output = shell_exec(
-            ' .\Services\Barcode\venv\Scripts\python.exe'
+            'python3'
             . ' ' . $pythonScriptPath
             . ' ' . $barcodeImagePath
         );
+        file_put_contents('python.log', ' python3'
+            . ' ' . $pythonScriptPath
+            . ' ' . $barcodeImagePath);
         $output = iconv('windows-1251', 'utf-8', $output);
         $parse_result = json_decode($output, true);
         if ($parse_result['status']) {

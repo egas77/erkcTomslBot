@@ -78,7 +78,7 @@ class PaymentCommand extends SystemCommand
         }
         $result = Request::emptyResponse();
 
-        if (Api::is_registered($user_id)) {
+       // if (Api::is_registered($user_id)) {
             $this->conversation = new Conversation($user_id, $chat_id, $this->getName());
             $notes = &$this->conversation->notes;
             !is_array($notes) && $notes = [];
@@ -223,14 +223,14 @@ class PaymentCommand extends SystemCommand
                     $result = $this->telegram->executeCommand('start_basic');
                     break;
             }
-        } else {
-            Request::sendMessage([
-                'chat_id' => $chat_id,
-                'text' => 'Вы не добавили ни одной квитанции.',
-                'parse_mode' => 'html'
-            ]);
-            return $this->telegram->executeCommand('start_basic');
-        }
+//        } else {
+//            Request::sendMessage([
+//                'chat_id' => $chat_id,
+//                'text' => 'Вы не добавили ни одной квитанции.',
+//                'parse_mode' => 'html'
+//            ]);
+//            return $this->telegram->executeCommand('start_basic');
+//        }
 
         return $result;
     }

@@ -74,7 +74,7 @@ class ListreceiptCommand extends SystemCommand
         $data['chat_id'] = $chat_id;
         $data['parse_mode'] = 'html';
         $result = Request::emptyResponse();
-        if (Api::is_registered($user_id)) {
+        //if (Api::is_registered($user_id)) {
             $list_barcodes = Api::getUserBarcodesByUserId($user_id);
             if (!empty($list_barcodes)) {
                 foreach ($list_barcodes as $barcode) {
@@ -105,11 +105,11 @@ class ListreceiptCommand extends SystemCommand
                 $data['text'] = 'у Вас нет добавленных квитанций.';
                 $result = Request::sendMessage($data);
             }
-        } else {
-            $data['text'] = 'Вы не зарегистрированы!';
-            Request::sendMessage($data);
-            return $this->telegram->executeCommand('start');
-        }
+//        } else {
+//            $data['text'] = 'Вы не зарегистрированы!';
+//            Request::sendMessage($data);
+//            return $this->telegram->executeCommand('start');
+//        }
         return $result;
     }
 }
