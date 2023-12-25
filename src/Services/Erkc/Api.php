@@ -2,6 +2,8 @@
 
 namespace Services\Erkc;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\Request;
 use Longman\TelegramBot\DB;
 use Longman\TelegramBot\Exception\TelegramException;
 use PDOException;
@@ -23,7 +25,7 @@ class Api
     public function checkBarcodeByImage($path): array
     {
         return $this->_parsePhotoBarcode($path);
-        return $this->parsePhotoBarcode($path);
+        //return $this->parsePhotoBarcode($path);
 
     }
 
@@ -129,24 +131,31 @@ class Api
             'status' => false,
             'text' => 'Код не распознан, либо не найден. Попробуйте более лучше сделать фото.'
         ];
-        //Initialise the cURL var
-        $ch = curl_init();
-        //Get the response from cURL
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $curl = curl_init();
 
-        //Set the Url
-        curl_setopt($ch, CURLOPT_URL, 'decode/decode-barcode');
-
-        //Create a POST array with the file in it
-        $postData = [
-            'testData' => '@'.$barcodeImagePath,
-        ];
-        file_put_contents('python.log',var_export($postData,true),FILE_APPEND);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
-
-        // Execute the request
-        $response = curl_exec($ch);
-        file_put_contents('python.log', $response,FILE_APPEND);
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'http://decode/decode-barcode',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_HTTPHEADER => array(
+                'Content-Type: image'
+            ),
+        ));
+        curl_setopt($curl, CURLOPT_POSTFIELDS, file_get_contents($barcodeImagePath)); # set image data
+        $response = curl_exec($curl);
+        file_put_contents('python.log', $response);
+        if (curl_errno($curl)) {
+            $result['text'] = curl_error($curl);
+        } else {
+            $result['text'] = $response;
+        }
+        curl_close($curl);
+        return $result;
     }
 
     public function parsePhotoBarcode(string $barcodeImagePath): array

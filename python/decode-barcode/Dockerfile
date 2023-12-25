@@ -1,13 +1,13 @@
-FROM python:3.12
+FROM python:3.12-slim
 WORKDIR /usr/src/app
 
 COPY requirements.txt ./
+COPY main.py ./
+COPY gunicorn.conf.py ./
+COPY utils ./utils
 RUN pip install --upgrade pip && \
-pip install --no-cache-dir -r requirements.txt && \
-apt-get update && \
-apt-get install -y python3-opencv
-COPY . .
+pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 80
 
-CMD ["gunicorn", "-b 0.0.0.0:80", "-w 4", "main:app"]
+CMD ["gunicorn"]

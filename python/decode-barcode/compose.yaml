@@ -1,0 +1,11 @@
+version: '3.8'
+name: decode-barcode
+services:
+  decode-barcode:
+    build: .
+
+  php-test:
+    image: php:8.2-cli
+    volumes:
+      - ./client:/home/client
+    tty: true
