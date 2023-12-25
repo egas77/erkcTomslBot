@@ -5,7 +5,7 @@ from utils.decode_barcode import parse_barcode
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 16
-
+app.json.ensure_ascii = False
 
 @app.route('/')
 def index():

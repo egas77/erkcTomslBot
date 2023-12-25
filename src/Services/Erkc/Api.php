@@ -148,13 +148,27 @@ class Api
         ));
         curl_setopt($curl, CURLOPT_POSTFIELDS, file_get_contents($barcodeImagePath)); # set image data
         $response = curl_exec($curl);
-        file_put_contents('python.log', $response);
-        if (curl_errno($curl)) {
-            $result['text'] = curl_error($curl);
-        } else {
-            $result['text'] = $response;
-        }
+
         curl_close($curl);
+        $parse_result = json_decode($response, true);
+
+        if ($parse_result['status']) {
+            if ($parse_result['type'] === 'qrcode' || $parse_result['type'] ==='qr_code') {
+                if (array_key_exists('PERSACC', $parse_result['data'])) {
+                    $barcode = $parse_result['data']['PERSACC'];
+                }
+                if (array_key_exists('PersAcc', $parse_result['data'])) {
+                    $barcode = $parse_result['data']['PersAcc'];
+                }
+
+            }
+            if ($parse_result['type'] === 'ean13') {
+                $barcode = $parse_result['data'];
+            }
+            $response_by_api = json_decode($this->fetchByApi($barcode), true);
+            $result = $this->checkCodeApi($response_by_api);
+            $result['barcode'] = $barcode;
+        }
         return $result;
     }
 
