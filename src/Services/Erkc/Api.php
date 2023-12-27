@@ -704,16 +704,24 @@ class Api
         return self::fetchAuthUrl($method, $access_token, $sig);
     }
 
-    public static function getPaymentHistories($offset, $userId, $phone = null): array
+    public static function getPaymentHistories($offset, $userId,$list_barcodes, $phone = null): array
     {
         $access_token = (new Api())->getAccessToken($userId, $phone);
         $method = 'payments.getbyuser';
         $sig = self::genSig($access_token, $method);
-        $response = self::fetchAuthUrl($method, $access_token, $sig);
-        if (!empty($response)) {
-            $pageCount = (int)ceil(count($response) / 12);
-            $totalPayments = count($response);
-            $paymentHistories = self::parsePaymentHistories($offset, $response);
+        $receipts = self::fetchAuthUrl($method, $access_token, $sig);
+        // Преобразование массива
+        $barcodes = array_map(function ($receipt) {
+            return $receipt['barcode'];
+        }, $list_barcodes);
+        // Фильтрация массива
+        $filteredReceipts = array_filter($receipts, function ($receipt) use ($barcodes) {
+            return in_array($receipt['barcode'], $barcodes);
+        });
+        if (!empty($filteredReceipts)) {
+            $pageCount = (int)ceil(count($filteredReceipts) / 12);
+            $totalPayments = count($filteredReceipts);
+            $paymentHistories = self::parsePaymentHistories($offset, $filteredReceipts);
         } else {
             return [];
         }

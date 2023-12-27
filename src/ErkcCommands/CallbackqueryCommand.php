@@ -112,9 +112,9 @@ class CallbackqueryCommand extends SystemCommand
             $pageCount = (int)explode('_', $callback_data)[5];
             $page = (int)explode('_', $callback_data)[6];
             $first_message_id = (int)explode('_', $callback_data)[7];
-
+            $list_barcodes = Api::getUserBarcodesByUserId($user_id);
             // Здесь получаем историю оплат для данного пользователя и смещения $offset
-            $paymentHistory = Api::getPaymentHistories($offset, $user_id);
+            $paymentHistory = Api::getPaymentHistories($offset, $user_id, $list_barcodes);
             $keyboards = [];
             if ($page === 1) {
                 $offset_forward = $offset + 12;
