@@ -53,32 +53,44 @@ class HistorymetersCommand extends SystemCommand
             $user_id = $callback_query->getFrom()->getId();
             $message_id = $callback_query->getMessage()->getMessageId();
             $chat_id = $callback_query->getMessage()->getChat()->getId();
-            file_put_contents('historiesMeterCallback.log', 'callback_query:' . $user_id . "\n", FILE_APPEND);
+        }
+        return $this->buildInvoiceAccountSelectionKeyboard($chat_id, $user_id, $message_id);
+    }
+
+    private function buildInvoiceAccountSelectionKeyboard($chat_id, $user_id, $message_id): ServerResponse
+    {
+        $list_barcodes = Api::getUserBarcodesByUserId($user_id);
+        // Преобразование массива
+        foreach ($list_barcodes as $item) {
+            $payload = json_decode($item['payload'], true);
+            // Проверяем есть ли данные о счётчиках
+            if (isset($payload['meters'])) {
+                if ($payload['meters']['status']) {
+                    if ($payload && isset($payload['service_name']) && isset($payload['address'])) {
+                        $barcodes[] = [
+                            'barcode' => $item['barcode'],
+                            'service_name' => $payload['service_name'],
+                            'address' => $payload['address']
+                        ];
+                    }
+                }
+            }
         }
 
-        //Request::emptyResponse();
-        $meters = Api::getMeterHistories(0, $user_id);
-        if (empty($meters)) {
-            return Request::sendMessage([
-                'chat_id' => $chat_id,
-                'text' => 'Сервер не доступен, попробуйте позже!'
-            ]);
+        $keyboard = [];
+        foreach ($barcodes as $barcode) {
+            $keyboard[] = [
+                'text' => (string)$barcode['barcode'],
+                'callback_data' => 'cb_meter_barcode_' . $barcode['barcode']
+            ];
         }
-        $inline_keyboard = new InlineKeyboard([
-            [
-                'text' => '1/' . $meters['pageCount'], 'callback_data' => 'cb_loading_meter'
-            ],
-            [
-                'text' => 'Вперед  ➡',
-                'callback_data' => 'cb_meter_page_12_' . $meters['total'] . '_' . $meters['pageCount'] . '_2_' . $message_id
-            ],
-        ]);
-
+        $first_message_id = 0;
+        $ikb_delete = ['text' => 'Скрыть', 'callback_data' => 'delete_msg_' . $message_id . '_' . $first_message_id];
         return Request::sendMessage([
             'chat_id' => $chat_id,
-            'text' => implode($meters['meters']),
+            'text' => 'Выберите штрихкод:',
             'parse_mode' => 'html',
-            'reply_markup' => $inline_keyboard
+            'reply_markup' => new InlineKeyboard($keyboard, [$ikb_delete])
         ]);
     }
 }

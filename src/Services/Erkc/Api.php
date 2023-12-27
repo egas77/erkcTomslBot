@@ -738,12 +738,13 @@ class Api
         return [];
     }
 
-    public static function getMeterHistories($offset, $userId, $phone = null): array
+    public static function getMeterHistories($offset, $userId,$barcode, $phone = null): array
     {
         $access_token = (new Api())->getAccessToken($userId, $phone);
         $method = 'ipu.gethistorybyreceipt';
-        $sig = self::genSig($access_token, $method);
-        $response = self::fetchAuthUrl($method, $access_token, $sig);
+        $sig = self::genSig($access_token, $method,$barcode);
+        $response = self::fetchAuthUrl($method, $access_token, $sig,$barcode);
+        file_put_contents('getMeterHistories.log',var_export($response,true));
         if (!empty($response)) {
             $pageCount = (int)ceil(count($response) / 12);
             $totalMeters = count($response);
