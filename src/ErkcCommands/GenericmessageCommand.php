@@ -139,7 +139,7 @@ class GenericmessageCommand extends SystemCommand
                 return Request::sendMessage(
                     [
                         'chat_id' => $message->getChat()->getId(),
-                        'text' => 'Возникла ошибка при привязке номера. Попробуйте позже.'
+                        'text' => 'Ваш номер не найден.'
                     ]
                 );
             }

@@ -73,7 +73,7 @@ class SendmeterCommand extends SystemCommand
             $chat_id = $callback_query->getMessage()->getChat()->getId();
         }
         $result = Request::emptyResponse();
-        if (Api::is_registered($user_id)) {
+        //if (Api::is_registered($user_id)) {
             $this->conversation = new Conversation($user_id, $chat_id, $this->getName());
             $notes = &$this->conversation->notes;
             !is_array($notes) && $notes = [];
@@ -189,14 +189,14 @@ class SendmeterCommand extends SystemCommand
                         }
                     }
             }
-        } else {
-            Request::sendMessage([
-                'chat_id' => $chat_id,
-                'text' => 'Вы не зарегистрированы!',
-                'parse_mode' => 'html'
-            ]);
-            return $this->telegram->executeCommand('start');
-        }
+//        } else {
+//            Request::sendMessage([
+//                'chat_id' => $chat_id,
+//                'text' => 'Вы не зарегистрированы!',
+//                'parse_mode' => 'html'
+//            ]);
+//            return $this->telegram->executeCommand('start');
+//        }
         return $result;
     }
 
