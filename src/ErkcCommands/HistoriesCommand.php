@@ -54,29 +54,37 @@ class HistoriesCommand extends SystemCommand
             $message_id = $callback_query->getMessage()->getMessageId();
             $chat_id = $callback_query->getMessage()->getChat()->getId();
         }
-        $payments = Api::getPaymentHistories(0, $user_id);
-        if (empty($payments)) {
+        $list_barcodes = Api::getUserBarcodesByUserId($user_id);
+        if (!empty($list_barcodes)) {
+            $payments = Api::getPaymentHistories(0, $user_id, $list_barcodes);
+            if (empty($payments)) {
+                return Request::sendMessage([
+                    'chat_id' => $chat_id,
+                    'text' => 'Платежи не найдены.'
+                ]);
+            }
+            $inline_keyboard = new InlineKeyboard([
+                [
+                    'text' => '1/' . $payments['pageCount'], 'callback_data' => 'cb_loading'
+                ],
+                [
+                    'text' => 'Вперед  ➡',
+                    'callback_data' => 'cb_payment_page_12_' . $payments['total'] . '_' . $payments['pageCount'] . '_2_' . $message_id
+                ],
+            ]);
+
             return Request::sendMessage([
                 'chat_id' => $chat_id,
-                'text' => 'Сервер не доступен, попробуйте позже!'
+                'text' => implode($payments['payments']),
+                'parse_mode' => 'html',
+                'reply_markup' => $inline_keyboard
+            ]);
+        } else {
+            return Request::sendMessage([
+                'chat_id' => $chat_id,
+                'text' => 'у Вас нет добавленных квитанций.'
             ]);
         }
-        $inline_keyboard = new InlineKeyboard([
-            [
-                'text' => '1/' . $payments['pageCount'], 'callback_data' => 'cb_loading'
-            ],
-            [
-                'text' => 'Вперед  ➡',
-                'callback_data' => 'cb_payment_page_12_' . $payments['total'] . '_' . $payments['pageCount'] . '_2_' . $message_id
-            ],
-        ]);
-
-        return Request::sendMessage([
-            'chat_id' => $chat_id,
-            'text' => implode($payments['payments']),
-            'parse_mode' => 'html',
-            'reply_markup' => $inline_keyboard
-        ]);
     }
 
     function displayPayments($chat_id, $offset = 0)
