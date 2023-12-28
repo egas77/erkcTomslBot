@@ -18,7 +18,6 @@ services:
             - php
             - mysqldb
     php:
-        #build: .
         image: nanoninja/php-fpm:${PHP_VERSION}
         restart: always
         volumes:
@@ -58,10 +57,9 @@ services:
             - ./data/db/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
     python:
         container_name: decode
+        restart: always
         build:
             context: python/decode-barcode/.
             dockerfile: Dockerfile
-        ports:
-            - "8888:80"
         volumes:
             - "./python:/app"
