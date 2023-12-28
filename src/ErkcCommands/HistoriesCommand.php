@@ -55,36 +55,53 @@ class HistoriesCommand extends SystemCommand
             $chat_id = $callback_query->getMessage()->getChat()->getId();
         }
         $list_barcodes = Api::getUserBarcodesByUserId($user_id);
-        if (!empty($list_barcodes)) {
-            $payments = Api::getPaymentHistories(0, $user_id, $list_barcodes);
-            if (empty($payments)) {
-                return Request::sendMessage([
-                    'chat_id' => $chat_id,
-                    'text' => 'Платежи не найдены.'
-                ]);
-            }
-            $inline_keyboard = new InlineKeyboard([
-                [
-                    'text' => '1/' . $payments['pageCount'], 'callback_data' => 'cb_loading'
-                ],
-                [
-                    'text' => 'Вперед  ➡',
-                    'callback_data' => 'cb_payment_page_12_' . $payments['total'] . '_' . $payments['pageCount'] . '_2_' . $message_id
-                ],
-            ]);
-
-            return Request::sendMessage([
-                'chat_id' => $chat_id,
-                'text' => implode($payments['payments']),
-                'parse_mode' => 'html',
-                'reply_markup' => $inline_keyboard
-            ]);
-        } else {
+        if (empty($list_barcodes)) {
             return Request::sendMessage([
                 'chat_id' => $chat_id,
                 'text' => 'у Вас нет добавленных квитанций.'
             ]);
         }
+
+//        $payments = Api::getPaymentHistories(0, $user_id, $list_barcodes);
+//        if (empty($payments)) {
+//            return Request::sendMessage([
+//                'chat_id' => $chat_id,
+//                'text' => 'Платежи не найдены.'
+//            ]);
+//        }
+
+        // Преобразование массива
+        foreach ($list_barcodes as $item) {
+            $payload = json_decode($item['payload'], true);
+            // Проверяем есть ли данные о счётчиках
+            if (isset($payload['meters'])) {
+                if ($payload['meters']['status']) {
+                    if ($payload && isset($payload['service_name']) && isset($payload['address'])) {
+                        $barcodes[] = [
+                            'barcode' => $item['barcode'],
+                            'service_name' => $payload['service_name'],
+                            'address' => $payload['address']
+                        ];
+                    }
+                }
+            }
+        }
+
+        $keyboard = [];
+        foreach ($barcodes as $barcode) {
+            $keyboard[] = [
+                'text' => (string)$barcode['barcode'],
+                'callback_data' => 'cb_payment_barcode_' . $barcode['barcode']
+            ];
+        }
+
+        $ikb_delete = ['text' => 'Скрыть', 'callback_data' => 'delete_msg_' . $message_id . '_0'];
+        return Request::sendMessage([
+            'chat_id' => $chat_id,
+            'text' => 'Выберите штрихкод:',
+            'parse_mode' => 'html',
+            'reply_markup' => new InlineKeyboard($keyboard, [$ikb_delete])
+        ]);
     }
 
     function displayPayments($chat_id, $offset = 0)

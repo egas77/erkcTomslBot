@@ -2,8 +2,6 @@
 
 namespace Services\Erkc;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Psr7\Request;
 use Longman\TelegramBot\DB;
 use Longman\TelegramBot\Exception\TelegramException;
 use PDOException;
@@ -133,7 +131,7 @@ class Api
         ];
         $curl = curl_init();
 
-        curl_setopt_array($curl, array(
+        curl_setopt_array($curl, [
             CURLOPT_URL => 'http://decode/decode-barcode',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
@@ -142,10 +140,10 @@ class Api
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_HTTPHEADER => array(
+            CURLOPT_HTTPHEADER => [
                 'Content-Type: image'
-            ),
-        ));
+            ],
+        ]);
         curl_setopt($curl, CURLOPT_POSTFIELDS, file_get_contents($barcodeImagePath)); # set image data
         $response = curl_exec($curl);
 
@@ -153,7 +151,7 @@ class Api
         $parse_result = json_decode($response, true);
 
         if ($parse_result['status']) {
-            if ($parse_result['type'] === 'qrcode' || $parse_result['type'] ==='qr_code') {
+            if ($parse_result['type'] === 'qrcode' || $parse_result['type'] === 'qr_code') {
                 if (array_key_exists('PERSACC', $parse_result['data'])) {
                     $barcode = $parse_result['data']['PERSACC'];
                 }
@@ -704,7 +702,27 @@ class Api
         return self::fetchAuthUrl($method, $access_token, $sig);
     }
 
-    public static function getPaymentHistories($offset, $userId,$list_barcodes, $phone = null): array
+    public static function getPaymentHistoriesByBarcode($offset, $userId, $barcode): array
+    {
+        $access_token = (new Api())->getAccessToken($userId);
+        $method = 'payments.getbyreceipt';
+        $sig = self::genSig($access_token, $method, 'code=' . $barcode);
+        $receipts = self::fetchAuthUrl($method, $access_token, $sig, 'code=' . $barcode);
+        if (!empty($receipts)) {
+            $pageCount = (int)ceil(count($receipts) / 12);
+            $totalPayments = count($receipts);
+            $paymentHistories = self::parsePaymentHistories($offset, $receipts);
+        } else {
+            return [];
+        }
+        return [
+            'payments' => $paymentHistories,
+            'pageCount' => $pageCount,
+            'total' => $totalPayments
+        ];
+    }
+
+    public static function getPaymentHistories($offset, $userId, $list_barcodes, $phone = null): array
     {
         $access_token = (new Api())->getAccessToken($userId, $phone);
         $method = 'payments.getbyuser';
@@ -738,13 +756,13 @@ class Api
         return [];
     }
 
-    public static function getMeterHistories($offset, $userId,$barcode, $phone = null): array
+    public static function getMeterHistories($offset, $userId, $barcode, $phone = null): array
     {
         $access_token = (new Api())->getAccessToken($userId, $phone);
         $method = 'ipu.gethistorybyreceipt';
-        $sig = self::genSig($access_token, $method,$barcode);
-        $response = self::fetchAuthUrl($method, $access_token, $sig,$barcode);
-        file_put_contents('getMeterHistories.log',var_export($response,true));
+        $sig = self::genSig($access_token, $method, $barcode);
+        $response = self::fetchAuthUrl($method, $access_token, $sig, $barcode);
+
         if (!empty($response)) {
             $pageCount = (int)ceil(count($response) / 12);
             $totalMeters = count($response);
