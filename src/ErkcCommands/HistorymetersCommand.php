@@ -66,6 +66,7 @@ class HistorymetersCommand extends SystemCommand
                 'text' => 'у Вас нет добавленных квитанций.'
             ]);
         }
+
         // Преобразование массива
         foreach ($list_barcodes as $item) {
             $payload = json_decode($item['payload'], true);
@@ -82,21 +83,27 @@ class HistorymetersCommand extends SystemCommand
                 }
             }
         }
-
+        if (empty($barcodes)) {
+            return Request::sendMessage([
+                'chat_id' => $chat_id,
+                'text' => 'Нет данных по счётчикам по Вашим квитанциям.'
+            ]);
+        }
         $keyboard = [];
         foreach ($barcodes as $barcode) {
-            $keyboard[] = [
+            $keyboard[] = [[
                 'text' => (string)$barcode['barcode'],
                 'callback_data' => 'cb_meter_barcode_' . $barcode['barcode']
-            ];
+            ]];
         }
-        $first_message_id = 0;
-        $ikb_delete = ['text' => 'Скрыть', 'callback_data' => 'delete_msg_' . $message_id . '_' . $first_message_id];
+        $keyboard[] = [['text' => 'Скрыть', 'callback_data' => 'delete_msg_' . $message_id . '_0']];
+        $inline_keyboard = new InlineKeyboard(...$keyboard);
+
         return Request::sendMessage([
             'chat_id' => $chat_id,
             'text' => 'Выберите штрихкод:',
             'parse_mode' => 'html',
-            'reply_markup' => new InlineKeyboard($keyboard, [$ikb_delete])
+            'reply_markup' => $inline_keyboard
         ]);
     }
 }

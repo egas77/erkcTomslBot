@@ -4,6 +4,8 @@ namespace Longman\TelegramBot\Commands\SystemCommands;
 
 use Longman\TelegramBot\Commands\SystemCommand;
 use Longman\TelegramBot\Entities\InlineKeyboard;
+use Longman\TelegramBot\Entities\InlineKeyboardButton;
+use Longman\TelegramBot\Entities\Keyboard;
 use Longman\TelegramBot\Entities\ServerResponse;
 use Longman\TelegramBot\Exception\TelegramException;
 use Longman\TelegramBot\Request;
@@ -62,92 +64,33 @@ class HistoriesCommand extends SystemCommand
             ]);
         }
 
-//        $payments = Api::getPaymentHistories(0, $user_id, $list_barcodes);
-//        if (empty($payments)) {
-//            return Request::sendMessage([
-//                'chat_id' => $chat_id,
-//                'text' => 'Платежи не найдены.'
-//            ]);
-//        }
-
         // Преобразование массива
         foreach ($list_barcodes as $item) {
             $payload = json_decode($item['payload'], true);
-            // Проверяем есть ли данные о счётчиках
-            if (isset($payload['meters'])) {
-                if ($payload['meters']['status']) {
-                    if ($payload && isset($payload['service_name']) && isset($payload['address'])) {
-                        $barcodes[] = [
-                            'barcode' => $item['barcode'],
-                            'service_name' => $payload['service_name'],
-                            'address' => $payload['address']
-                        ];
-                    }
-                }
+            if ($payload && isset($payload['service_name']) && isset($payload['address'])) {
+                $barcodes[] = [
+                    'barcode' => $item['barcode'],
+                    'service_name' => $payload['service_name'],
+                    'address' => $payload['address']
+                ];
             }
-        }
 
+        }
         $keyboard = [];
         foreach ($barcodes as $barcode) {
-            $keyboard[] = [
+            $keyboard[] = [[
                 'text' => (string)$barcode['barcode'],
                 'callback_data' => 'cb_payment_barcode_' . $barcode['barcode']
-            ];
+            ]];
         }
+        $keyboard[] = [['text' => 'Скрыть', 'callback_data' => 'delete_msg_' . $message_id . '_0']];
+        $inline_keyboard = new InlineKeyboard(...$keyboard);
 
-        $ikb_delete = ['text' => 'Скрыть', 'callback_data' => 'delete_msg_' . $message_id . '_0'];
         return Request::sendMessage([
             'chat_id' => $chat_id,
             'text' => 'Выберите штрихкод:',
             'parse_mode' => 'html',
-            'reply_markup' => new InlineKeyboard($keyboard, [$ikb_delete])
+            'reply_markup' => $inline_keyboard
         ]);
-    }
-
-    function displayPayments($chat_id, $offset = 0)
-    {
-        // Получение данных оплат (возможно, из базы данных)
-        $payments = getPaymentsFromDatabase($offset); // Вернёт массив из, например, 12 записей
-
-        // Формирование текста сообщения
-        $messageText = "История оплат:\n";
-        foreach ($payments as $payment) {
-            $messageText .= date('Y-m-d', $payment['date']) . " - " . $payment['amount'] . " руб.\n";
-        }
-
-        // Формирование inline-клавиатуры
-        $inlineKeyboard = [
-            'inline_keyboard' => []
-        ];
-        if ($offset > 0) {
-            $inlineKeyboard['inline_keyboard'][] = [
-                [
-                    'text' => 'Назад',
-                    'callback_data' => 'prev_' . ($offset - 12)
-                ]
-            ];
-        }
-        $inlineKeyboard['inline_keyboard'][] = [
-            [
-                'text' => 'Следующий',
-                'callback_data' => 'next_' . ($offset + 12)
-            ]
-        ];
-
-        // Обновляем предыдущее сообщение
-        editMessageText($chat_id, $message_id, $messageText); // Фиктивная функция
-        editMessageReplyMarkup($chat_id, $message_id, $inlineKeyboard); // Фиктивная функция
-    }
-
-// Обработка callback-кнопок
-    function handleCallback($callbackData, $chat_id, $message_id)
-    {
-        $offset = 0;
-        if (strpos($callbackData, 'next_') === 0) {
-            $offset = (int)substr($callbackData, 5);
-        } elseif (strpos($callbackData, 'prev_') === 0) {
-            $offset = max(0, (int)substr($callbackData, 5));
-        }
-        displayPayments($chat_id, $offset);
     }
 }
