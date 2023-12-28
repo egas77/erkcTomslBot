@@ -11,7 +11,9 @@ class Api
     const API_TOKEN = 'iuHHAnFo3U87A4Kvl173yX1ausYd7EGusf0IkVdkaWiRJeOk47d2U4NJV4mFrBf2';
     const APP_ID = 'VtqDyaekN';
     const PRIVATE_KEY = '21ba15f3410d6fe7fd00b83d18025358';
-    const API_URL = 'https://api.vc.tom.ru';
+//    const API_URL = 'https://api.vc.tom.ru';
+
+    const API_URL = 'http://10.10.20.86:8002';
     const API_IPU_GET_METHOD = '&method=ipu.getbyreceipt';
     const API_IPU_SEND_METERS_METHOD = '&method=ipu.sendmeters';
 
