@@ -60,6 +60,12 @@ class HistorymetersCommand extends SystemCommand
     private function buildInvoiceAccountSelectionKeyboard($chat_id, $user_id, $message_id): ServerResponse
     {
         $list_barcodes = Api::getUserBarcodesByUserId($user_id);
+        if (empty($list_barcodes)) {
+            return Request::sendMessage([
+                'chat_id' => $chat_id,
+                'text' => 'у Вас нет добавленных квитанций.'
+            ]);
+        }
         // Преобразование массива
         foreach ($list_barcodes as $item) {
             $payload = json_decode($item['payload'], true);

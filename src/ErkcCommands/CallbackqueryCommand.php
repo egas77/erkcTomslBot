@@ -83,6 +83,20 @@ class CallbackqueryCommand extends SystemCommand
             ]);
             return $this->getTelegram()->executeCommand('history_meters');
         }
+
+        if (strpos($callback_data, 'cb_payment_barcode_choice') === 0) {
+            $first_message_id = (int)explode('_', $callback_data)[5];
+            $message_id = (int)explode('_', $callback_data)[4];
+            Request::deleteMessage([
+                'chat_id' => $chat_id,
+                'message_id' => $first_message_id,
+            ]);
+            Request::deleteMessage([
+                'chat_id' => $chat_id,
+                'message_id' => $message_id,
+            ]);
+            return $this->getTelegram()->executeCommand('histories');
+        }
         if (strpos($callback_data, 'cb_meter_barcode_') === 0) {
             $barcode = explode('cb_meter_barcode_', $callback_data)[1];
             $meterHistory = Api::getMeterHistories(0, $user_id, 'code=' . $barcode);
@@ -162,15 +176,45 @@ class CallbackqueryCommand extends SystemCommand
             ]);
         }
 
+        if (strpos($callback_data, 'cb_payment_barcode_') === 0) {
+            $barcode = explode('cb_payment_barcode_', $callback_data)[1];
+            $paymentHistory = Api::getPaymentHistoriesByBarcode(0, $user_id, $barcode);
+            if (empty($paymentHistory)) {
+                return Request::sendMessage([
+                    'chat_id' => $chat_id,
+                    'text' => 'Платежи не найдены!'
+                ]);
+            }
+            $inline_keyboard = new InlineKeyboard([
+                [
+                    'text' => '1/' . $paymentHistory['pageCount'],
+                    'callback_data' => 'cb_loading_meter'
+                ],
+                [
+                    'text' => 'Вперед  ➡',
+                    'callback_data' => 'cb_payment_page_12_' . $paymentHistory['total'] . '_' . $paymentHistory['pageCount'] . '_2_' . $message_id . '_' . $barcode
+                ],
+            ], [['text' => 'Выбрать квитанцию', 'callback_data' => 'cb_payment_barcode_choice_' . $message_id]],
+                [['text' => 'Скрыть', 'callback_data' => 'delete_msg_' . $message_id]],
+            );
+            return Request::editMessageText([
+                'chat_id' => $chat_id,
+                'message_id' => $message_id,
+                'text' => implode($paymentHistory['payments']),
+                'parse_mode' => 'html',
+                'reply_markup' => $inline_keyboard,
+            ]);
+        }
+
         if (strpos($callback_data, 'cb_payment_page_') === 0) {
             $offset = (int)explode('_', $callback_data)[3];
             $paymentsTotal = (int)explode('_', $callback_data)[4];
             $pageCount = (int)explode('_', $callback_data)[5];
             $page = (int)explode('_', $callback_data)[6];
             $first_message_id = (int)explode('_', $callback_data)[7];
-            $list_barcodes = Api::getUserBarcodesByUserId($user_id);
+            $barcode = (int)explode('_', $callback_data)[8];
             // Здесь получаем историю оплат для данного пользователя и смещения $offset
-            $paymentHistory = Api::getPaymentHistories($offset, $user_id, $list_barcodes);
+            $paymentHistory = Api::getPaymentHistoriesByBarcode($offset, $user_id, $barcode);
             $keyboards = [];
             if ($page === 1) {
                 $offset_forward = $offset + 12;
@@ -178,14 +222,14 @@ class CallbackqueryCommand extends SystemCommand
                     ['text' => $page . '/' . $pageCount, 'callback_data' => 'page_counter'];
                 $ikb_forward =
                     ['text' => 'Вперёд ➡', 'callback_data' => 'cb_payment_page_'
-                        . $offset_forward . '_' . $paymentsTotal . '_' . $pageCount . '_' . ($page + 1) . '_' . $first_message_id];
+                        . $offset_forward . '_' . $paymentsTotal . '_' . $pageCount . '_' . ($page + 1) . '_' . $first_message_id . '_' . $barcode];
                 $keyboards[] = $ikb_loaded;
                 $keyboards[] = $ikb_forward;
             } else if ($page === $pageCount) {
                 $offset_back = $offset - 12;
                 $ikb_back =
                     ['text' => '⬅ Назад', 'callback_data' => 'cb_payment_page_'
-                        . $offset_back . '_' . $paymentsTotal . '_' . $pageCount . '_' . ($page - 1) . '_' . $first_message_id];
+                        . $offset_back . '_' . $paymentsTotal . '_' . $pageCount . '_' . ($page - 1) . '_' . $first_message_id . '_' . $barcode];
                 $ikb_loaded =
                     ['text' => $page . '/' . $pageCount, 'callback_data' => 'page_counter'];
                 $keyboards[] = $ikb_back;
@@ -195,20 +239,22 @@ class CallbackqueryCommand extends SystemCommand
                 $offset_back = $offset - 12;
                 $ikb_back =
                     ['text' => '⬅ Назад', 'callback_data' => 'cb_payment_page_'
-                        . $offset_back . '_' . $paymentsTotal . '_' . $pageCount . '_' . ($page - 1) . '_' . $first_message_id];
+                        . $offset_back . '_' . $paymentsTotal . '_' . $pageCount . '_' . ($page - 1) . '_' . $first_message_id . '_' . $barcode];
                 $ikb_loaded =
                     ['text' => $page . '/' . $pageCount, 'callback_data' => 'page_counter'];
                 $ikb_forward =
                     ['text' => 'Вперёд ➡', 'callback_data' => 'cb_payment_page_'
-                        . $offset_forward . '_' . $paymentsTotal . '_' . $pageCount . '_' . ($page + 1) . '_' . $first_message_id];
+                        . $offset_forward . '_' . $paymentsTotal . '_' . $pageCount . '_' . ($page + 1) . '_' . $first_message_id . '_' . $barcode];
                 $keyboards[] = $ikb_back;
                 $keyboards[] = $ikb_loaded;
                 $keyboards[] = $ikb_forward;
             }
-            $ikb_delete = ['text' => 'Скрыть', 'callback_data' => 'delete_msg_' . $message_id . '_' . $first_message_id];
+            $ikb_choice = [['text' => 'Выбрать квитанцию', 'callback_data' => 'cb_payment_barcode_choice_' . $message_id . '_' . $first_message_id]];
+            $ikb_delete = [['text' => 'Скрыть', 'callback_data' => 'delete_msg_' . $message_id . '_' . $first_message_id . '_' . $barcode]];
             $inline_keyboard = new InlineKeyboard(
                 $keyboards,
-                [$ikb_delete]);
+                $ikb_choice,
+                $ikb_delete);
 
 
             return Request::editMessageText([
