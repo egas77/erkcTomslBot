@@ -108,7 +108,7 @@ class GenericmessageCommand extends SystemCommand
             return $this->getTelegram()->executeCommand('select_receipt');
         } else if ($message->getType() === 'contact') {
             //проверка мобильного на vc.tom.ru
-            $response = Api::authByPhone('+79138293043');
+            $response = Api::authByPhone($message->getContact()->getPhoneNumber());
             if (!empty($response)) {
                 //сохраняем номер
                 if (Api::setMobile($user_id, $message->getContact()->getPhoneNumber())) {
