@@ -81,6 +81,8 @@ class GenericmessageCommand extends SystemCommand
         } else if (str_starts_with($text, 'Отправить замечания или предложение по работе бота. ✍')) {
             new Conversation($user_id, $chat_id, 'send_suggestion');
             return $this->getTelegram()->executeCommand('send_suggestion');
+        } else if ($text === 'Что может бот ❓'){
+            return $this->getTelegram()->executeCommand('start');
         } else if ($text === 'История платежей 📚') {
             return $this->getTelegram()->executeCommand('histories');
         } else if ($text === 'История показаний 📈') {
@@ -106,7 +108,7 @@ class GenericmessageCommand extends SystemCommand
             return $this->getTelegram()->executeCommand('select_receipt');
         } else if ($message->getType() === 'contact') {
             //проверка мобильного на vc.tom.ru
-            $response = Api::authByPhone($message->getContact()->getPhoneNumber());
+            $response = Api::authByPhone('+79138293043');
             if (!empty($response)) {
                 //сохраняем номер
                 if (Api::setMobile($user_id, $message->getContact()->getPhoneNumber())) {

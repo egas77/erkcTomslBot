@@ -10,6 +10,7 @@ class ErkcKeyboards
     public static function getBasicKb(): Keyboard
     {
         return new Keyboard(
+            ['Что может бот ❓'],
             ['Добавить квитанцию 📥'],
             ['Удалить квитанцию 🗑️'],
             //['Выбрать квитанцию'],
@@ -23,6 +24,7 @@ class ErkcKeyboards
     public static function keyboardByRegisteredUser(): Keyboard
     {
         return new Keyboard(
+            ['Что может бот ❓'],
             ['Добавить квитанцию 📥'],
             ['Удалить квитанцию 🗑️'],
             ['Список квитанций 📋'],

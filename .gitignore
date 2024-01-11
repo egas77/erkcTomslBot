@@ -22,4 +22,4 @@ nbproject/
 # SSL Certs
 etc/ssl/
 
-/data/db/mysql/#ib_16384_0.dblwr
+/data/db/mysql/
