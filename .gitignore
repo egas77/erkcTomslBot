@@ -25,3 +25,4 @@ etc/ssl/
 data/db/mysql
 .idea
 *.log
+/data/db/mysql/

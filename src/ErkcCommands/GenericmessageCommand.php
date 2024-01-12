@@ -81,6 +81,8 @@ class GenericmessageCommand extends SystemCommand
         } else if (str_starts_with($text, 'Отправить замечания или предложение по работе бота. ✍')) {
             new Conversation($user_id, $chat_id, 'send_suggestion');
             return $this->getTelegram()->executeCommand('send_suggestion');
+        } else if ($text === 'Что может бот ❓'){
+            return $this->getTelegram()->executeCommand('start');
         } else if ($text === 'История платежей 📚') {
             return $this->getTelegram()->executeCommand('histories');
         } else if ($text === 'История показаний 📈') {
