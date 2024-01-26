@@ -844,8 +844,8 @@ class Api
     {
         $access_token = (new Api())->getAccessToken($userId);
         $method = 'receipts.getfromreports';
-        $sig = self::genSig($access_token, $method, 'code=' . $barcode . 'period=' . $period);
-        $response = self::fetchAuthUrl($method, $access_token, $sig, 'code=' . $barcode . '&period=' . $period);
+        $sig = self::genSig($access_token, $method, 'code=' . $barcode . 'period=' . $period.'hide=1');
+        $response = self::fetchAuthUrl($method, $access_token, $sig, 'code=' . $barcode . '&period=' . $period.'&hide=1');
         if ($response['status']) {
             return 'https://vc.tom.ru/invoices/' . $response['hash_link'];
         } else {
